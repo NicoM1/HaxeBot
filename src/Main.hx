@@ -11,6 +11,8 @@ import twitter4j.QueryResult;
 import haxe.Int64;
 import haxe.Timer;
 
+using StringTools;
+
 class Main 
 {
 	static var t:Twitter;
@@ -19,12 +21,19 @@ class Main
 	
 	static var repeat:Timer;
 	
+	static var running:Bool = true;
+	
+	static var owner:String = "nico_m__";
+	
 	static function main() 
 	{
 		Log.trace = cleanTrace;
 		
 		start();
 		
+		Sys.print("Attempting Search");
+		search();
+
 		repeat = new Timer(6000);
 		repeat.run = search;
 	}
@@ -49,8 +58,12 @@ class Main
 	
 	static function search()
 	{
-		trace("Attempting Search");
-		try {
+		try 
+		{
+			if (running)
+			{
+				Sys.print(" |");
+			}
 			q.setSinceId(last);
 			
 			var qr:QueryResult = t.search(q); 
@@ -58,22 +71,69 @@ class Main
 			
 			if (haxetweets.size() > 0)
 			{
-				trace("Search Results:");
+				trace("\nSearch Results:");
 				
 				for (h in haxetweets)
 				{
-					trace("\t" + h.getText());
+					#if !debug
+						if (checkShutdown(h))
+						{
+							break;
+						}
+						else if (!running)
+						{
+							running = true;
+							break;
+						}
+					#end
+					
+					trace("\t" + "@" + h.getUser().getScreenName() + ": " + h.getText());
 					t.retweetStatus(h.getId());
 				}
 			
 				last = haxetweets.get(haxetweets.size() - 1).getId();
 			}
+		}
+		catch (e:Dynamic) { throw e; }
+	}
+	
+	static function checkShutdown(h:Status):Bool
+	{
+		try {
+			if (running)
+			{
+				if (h.getUser().getScreenName() == owner)
+				{
+					if (h.getText().indexOf("SHUTDOWN") > -1) 
+					{
+						if (h.getText().indexOf("@haxebot") > -1)
+						{
+							running = false;
+							trace("\nSHUTDOWN by @" + owner);
+							return true;
+						}
+					}
+				}
+			}
 			else
 			{
-				trace("\tNo Results");
+				if (h.getUser().getScreenName() == owner)
+				{
+					if (h.getText().indexOf("BOOT") > -1 )
+					{
+						if (h.getText().indexOf("@haxebot") > -1)
+						{
+							trace("\nREBOOTED by @" + owner);
+							Sys.print("Attempting Search");
+							return false;
+						}
+					}
+				}
+				return true;
 			}
 		}
 		catch (e:Dynamic) { throw e; }
+		return false;
 	}
 	
 	static function cleanTrace(v:Dynamic, ?inf:PosInfos)
