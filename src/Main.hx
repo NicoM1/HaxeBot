@@ -19,6 +19,8 @@ class Main
 	static var q:Query;
 	static var last:Int64;
 	
+	static var searchQuery:String = "#haxe OR openfl OR #openfl OR @haxelang OR @FlambeGames -from:@haxe -to:@haxe -RT";
+	
 	static var repeat:Timer;
 	
 	static var running:Bool = true;
@@ -41,7 +43,7 @@ class Main
 	static function start()
 	{	
 		t = TwitterFactory.getSingleton();
-		q = new Query("#haxe+exclude:retweets");
+		q = new Query(searchQuery);
 		
 		try { 			
 			q.setCount(1);
