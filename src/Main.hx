@@ -27,6 +27,8 @@ class Main
 	
 	static var owner:String = "nico_m__";
 	
+	static var pollDelay:Int = 12000;
+	
 	static function main() 
 	{
 		Log.trace = cleanTrace;
@@ -36,7 +38,7 @@ class Main
 		Sys.print("Attempting Search");
 		search();
 
-		repeat = new Timer(6000);
+		repeat = new Timer(pollDelay);
 		repeat.run = search;
 	}
 	
@@ -45,6 +47,13 @@ class Main
 		t = TwitterFactory.getSingleton();
 		q = new Query(searchQuery);
 		
+		resetLast();
+		
+		trace("INITIALIZED\n===================================");
+	}
+	
+	static function resetLast()
+	{
 		try { 			
 			q.setCount(1);
 			
@@ -55,7 +64,7 @@ class Main
 		}
 		catch (e:Dynamic) { throw e; }
 		
-		trace("INITIALIZED\n===================================");
+		q.setCount(10);
 	}
 	
 	static function search()
@@ -75,8 +84,12 @@ class Main
 			{
 				trace("\nSearch Results:");
 				
-				for (h in haxetweets)
+				var i = haxetweets.size()-1;
+				
+				while(i >= 0)
 				{
+					var h = haxetweets.get(i);
+					
 					#if !debug
 						if (checkShutdown(h))
 						{
@@ -91,9 +104,11 @@ class Main
 					
 					trace("\t" + "@" + h.getUser().getScreenName() + ": " + h.getText());
 					t.retweetStatus(h.getId());
+					
+					i--;
 				}
 			
-				last = haxetweets.get(haxetweets.size() - 1).getId();
+				last = haxetweets.get(0).getId();
 			}
 		}
 		catch (e:Dynamic) { throw e; }
