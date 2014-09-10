@@ -38,7 +38,7 @@ class Main
 	{
 		Log.trace = cleanTrace;
 		
-		delay = Std.int(20 / (pollDelay / 1000 * 60));
+		delay = Std.int(20 * 60 * 1000 / pollDelay);
 		
 		start();
 		
@@ -69,11 +69,11 @@ class Main
 			
 			last = haxetweets.get(0).getId();
 		}
-		catch (e:TwitterException)
+		catch (e:Dynamic) 
 		{
+			Sys.println(e); 
 			timer = delay;
 		}
-		catch (e:Dynamic) { throw e; }
 		
 		q.setCount(10);
 	}
@@ -83,6 +83,7 @@ class Main
 		if (timer > 0)
 		{
 			timer--;
+			trace("("+timer+") cycles remaining before reset"); 
 		}
 		if (timer <= 0)
 		{
@@ -128,11 +129,11 @@ class Main
 					last = haxetweets.get(0).getId();
 				}
 			}
-			catch (e:TwitterException)
-			{
+			catch (e:Dynamic) 
+			{ 
+				Sys.println(e);
 				timer = delay;
 			}
-			catch (e:Dynamic) { throw e; }
 		}
 	}
 	
@@ -171,11 +172,11 @@ class Main
 				return true;
 			}
 		}
-		catch (e:TwitterException)
-		{
+		catch (e:Dynamic) 
+		{ 
+			Sys.println(e); 
 			timer = delay;
 		}
-		catch (e:Dynamic) { throw e; }
 		return false;
 	}
 	
