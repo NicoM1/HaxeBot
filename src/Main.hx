@@ -22,6 +22,7 @@ class Main
 	static var last:Int64;
 	
 	static var searchQuery:String = "#haxe OR openfl OR #openfl OR @haxelang OR @FlambeGames -from:@haxe -to:@haxe -RT";
+	static var spammers:Array<String> = ["GDevBroadcaster", "Parodossy"];
 	
 	static var repeat:Timer;
 	
@@ -121,7 +122,18 @@ class Main
 						#end
 						
 						trace("\t" + "@" + h.getUser().getScreenName() + ": " + h.getText());
-						t.retweetStatus(h.getId());
+						var shouldTweet:Bool = true;
+						for (s in spammers)
+						{
+							if (s == h.getUser().getScreenName())
+							{
+								shouldTweet = false;
+							}
+						}
+						if (shouldTweet)
+						{
+							t.retweetStatus(h.getId());
+						}
 						
 						i--;
 					}
