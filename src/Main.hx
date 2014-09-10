@@ -8,6 +8,8 @@ import twitter4j.Status;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 
+import twitter4j.TwitterException;
+
 import haxe.Int64;
 import haxe.Timer;
 
@@ -29,9 +31,14 @@ class Main
 	
 	static var pollDelay:Int = 12000;
 	
+	static var timer:Int = 0;
+	static var delay:Int = 0;
+	
 	static function main() 
 	{
 		Log.trace = cleanTrace;
+		
+		delay = Std.int(20 / (pollDelay / 1000 * 60));
 		
 		start();
 		
@@ -62,6 +69,10 @@ class Main
 			
 			last = haxetweets.get(0).getId();
 		}
+		catch (e:TwitterException)
+		{
+			timer = delay;
+		}
 		catch (e:Dynamic) { throw e; }
 		
 		q.setCount(10);
@@ -69,49 +80,60 @@ class Main
 	
 	static function search()
 	{
-		try 
+		if (timer > 0)
 		{
-			if (running)
-			{
-				Sys.print(" |");
-			}
-			q.setSinceId(last);
-			
-			var qr:QueryResult = t.search(q); 
-			var haxetweets = qr.getTweets();
-			
-			if (haxetweets.size() > 0)
-			{
-				trace("\nSearch Results:");
-				
-				var i = haxetweets.size()-1;
-				
-				while(i >= 0)
-				{
-					var h = haxetweets.get(i);
-					
-					#if !debug
-						if (checkShutdown(h))
-						{
-							break;
-						}
-						else if (!running)
-						{
-							running = true;
-							break;
-						}
-					#end
-					
-					trace("\t" + "@" + h.getUser().getScreenName() + ": " + h.getText());
-					t.retweetStatus(h.getId());
-					
-					i--;
-				}
-			
-				last = haxetweets.get(0).getId();
-			}
+			timer--;
 		}
-		catch (e:Dynamic) { throw e; }
+		if (timer <= 0)
+		{
+			try 
+			{
+				if (running)
+				{
+					Sys.print(" |");
+				}
+				q.setSinceId(last);
+				
+				var qr:QueryResult = t.search(q); 
+				var haxetweets = qr.getTweets();
+				
+				if (haxetweets.size() > 0)
+				{
+					trace("\nSearch Results:");
+					
+					var i = haxetweets.size()-1;
+					
+					while(i >= 0)
+					{
+						var h = haxetweets.get(i);
+						
+						#if !debug
+							if (checkShutdown(h))
+							{
+								break;
+							}
+							else if (!running)
+							{
+								running = true;
+								break;
+							}
+						#end
+						
+						trace("\t" + "@" + h.getUser().getScreenName() + ": " + h.getText());
+						t.retweetStatus(h.getId());
+						
+						i--;
+					}
+				
+					last = haxetweets.get(0).getId();
+				}
+			}
+			catch (e:TwitterException)
+			{
+				timer = delay;
+			}
+			catch (e:Dynamic) { throw e; }
+		}
 	}
 	
 	static function checkShutdown(h:Status):Bool
@@ -148,6 +170,10 @@ class Main
 				}
 				return true;
 			}
+		}
+		catch (e:TwitterException)
+		{
+			timer = delay;
 		}
 		catch (e:Dynamic) { throw e; }
 		return false;
