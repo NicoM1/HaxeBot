@@ -22,7 +22,8 @@ class Main
 	static var last:Int64;
 	
 	static var searchQuery:String = "#haxe OR openfl OR #openfl OR @haxelang OR @FlambeGames -from:@haxe -to:@haxe -RT";
-	static var spammers:Array<String> = ["GDevBroadcaster", "Parodossy"];
+	static var spammers:Array<String> = ["GDevBroadcaster", "Parodossy", "TechWars_io"];
+	static var blocked:Array<String> = ["horny", "sexy", "cam", "girlz", "naked"];
 	
 	static var repeat:Timer;
 	
@@ -35,6 +36,7 @@ class Main
 	static var timer:Int = 0;
 	static var delay:Int = 0;
 	
+	//TODO: use streaming
 	static function main() 
 	{
 		Log.trace = cleanTrace;
@@ -128,6 +130,16 @@ class Main
 							if (s == h.getUser().getScreenName())
 							{
 								shouldTweet = false;
+								break;
+							}
+						}
+						var lower = h.getText().toLowerCase();
+						for (spam in blocked)
+						{
+							if (lower.indexOf(spam) != -1)
+							{
+								shouldTweet = false;
+								break;
 							}
 						}
 						if (shouldTweet)
@@ -140,6 +152,10 @@ class Main
 				
 					last = haxetweets.get(0).getId();
 				}
+			}
+			catch (e:TwitterException)
+			{
+				
 			}
 			catch (e:Dynamic) 
 			{ 
@@ -163,6 +179,14 @@ class Main
 							running = false;
 							trace("\nSHUTDOWN by @" + owner);
 							return true;
+						}
+					}
+					if (h.getText().indexOf("KILL") > -1) 
+					{
+						if (h.getText().indexOf("@haxebot") > -1)
+						{
+							trace("\nKILLED by @" + owner);
+							Sys.exit(0);
 						}
 					}
 				}
